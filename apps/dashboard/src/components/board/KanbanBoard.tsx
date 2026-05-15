@@ -16,6 +16,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { KanbanCard } from '@devpulse/ui'
 import { createClient } from '@/lib/supabase/client'
+import { useRealtimeTasks } from '@/hooks/useRealtimeTasks'
 import { KanbanColumn, type Column } from './KanbanColumn'
 import { TaskCard, type Task } from './TaskCard'
 
@@ -32,6 +33,8 @@ interface KanbanBoardProps {
 export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const queryClient = useQueryClient()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
+
+  useRealtimeTasks(projectId)
 
   // Activate drag only after moving 5 px — prevents accidental drags on click
   const sensors = useSensors(

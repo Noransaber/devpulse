@@ -78,6 +78,24 @@ pnpm build --filter @devpulse/ui
 
 ---
 
+## Session 4 — Bugs Fixed
+
+### 7. Vercel AI SDK v4 — `ai/react` no longer exists
+
+In AI SDK v4, the React hooks were moved to a separate package. The `ai/react` subpath export was removed.
+
+```ts
+// WRONG — ai/react does not exist in AI SDK v4
+import { useCompletion } from 'ai/react'
+
+// CORRECT — install @ai-sdk/react, then import from it
+import { useCompletion } from '@ai-sdk/react'
+```
+
+Always install `@ai-sdk/react` alongside `ai` and `@ai-sdk/openai` when using AI SDK v4 React hooks.
+
+---
+
 ## Critical Bugs Already Fixed — Do Not Reintroduce
 
 ### 1. `auth.protect()` must be awaited (Clerk v6)

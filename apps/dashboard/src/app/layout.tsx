@@ -6,6 +6,7 @@ import './globals.css'
 export const metadata: Metadata = {
   title: 'DevPulse',
   description: 'Real-time engineering team dashboard',
+  manifest: '/manifest.json',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

@@ -18,6 +18,7 @@ export default function HomePage() {
             Monorepo is wired up. Dashboard, UI, and Utils packages are all talking to each other.
           </p>
           <Button variant="primary">Get started</Button>
+          <SentryTestButton />
         </CardBody>
       </Card>
     </main>
