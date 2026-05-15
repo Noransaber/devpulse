@@ -1,0 +1,7 @@
+{
+  "extends": "@devpulse/tsconfig/react-library",
+  "compilerOptions": {
+    "baseUrl": "."
+  },
+  "include": [".storybook/**/*.ts", "src/**/*.ts", "src/**/*.tsx"]
+}

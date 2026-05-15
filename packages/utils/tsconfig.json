@@ -1,0 +1,8 @@
+{
+  "extends": "@devpulse/tsconfig/base",
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  },
+  "include": ["src"]
+}
