@@ -7,10 +7,10 @@ import { usePresence } from '@/hooks/usePresence'
 import { useTheme } from '@/hooks/useTheme'
 
 const NAV_LINKS = [
-  { href: '/',        label: 'Home' },
-  { href: '/board',   label: 'Board' },
-  { href: '/github',  label: 'GitHub' },
-  { href: '/standup', label: 'Standup' },
+  { href: '/dashboard', label: 'Home' },
+  { href: '/board',     label: 'Board' },
+  { href: '/github',    label: 'GitHub' },
+  { href: '/standup',   label: 'Standup' },
 ]
 
 function SunIcon() {
@@ -39,7 +39,7 @@ export function DashboardSidebar() {
 
   const links = NAV_LINKS.map((link) => ({
     ...link,
-    isActive: link.href === '/' ? pathname === '/' : pathname.startsWith(link.href),
+    isActive: pathname === link.href || (link.href !== '/dashboard' && pathname.startsWith(link.href)),
     onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault()
       router.push(link.href)

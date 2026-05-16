@@ -1,6 +1,3 @@
-Here's the full updated `context.md`:
-
-```markdown
 # Project Brief
 
 I'm a frontend developer with 3+ years of experience in React, Next.js,
@@ -224,4 +221,72 @@ cn() — combines clsx + tailwind-merge for all className logic
 - GITHUB_ACCESS_TOKEN (scopes: read:user, public_repo)
 - NEXT_PUBLIC_SENTRY_DSN
 - OPENAI_API_KEY (optional — standup page handles missing key gracefully)
-```
+
+# Session 5 — Completed (Polish + Dark Mode + Full CRUD)
+
+## What was built
+
+- Task CRUD: add, edit, delete tasks via modal
+- Sidebar polish: logo, user info, logout, active link highlighting
+- Loading skeletons + empty states on all pages
+- Homepage redesign: greeting, stats, nav cards, recent activity
+- Dark/light theme toggle with system preference + no flash
+
+## New files
+
+- src/hooks/useTaskMutations.ts (useCreateTask, useUpdateTask,
+  useDeleteTask — all with optimistic updates)
+- src/hooks/useTheme.ts (reads/writes localStorage, applies dark
+  class to <html>, defaults to prefers-color-scheme)
+- src/hooks/useHomeStats.ts (Supabase count queries for homepage
+  stats + last 5 updated tasks)
+- src/components/board/TaskModal.tsx (shared add/edit modal —
+  title, description, assignee dropdown, delete with confirmation)
+- src/components/board/KanbanSkeleton.tsx (3-column skeleton
+  with varying card counts — renders while board data loads)
+
+## Files updated from previous sessions
+
+- packages/ui/src/KanbanCard/KanbanCard.tsx — dark mode variants
+- packages/ui/src/Sidebar/Sidebar.tsx — dark mode variants
+- src/app/layout.tsx — inline anti-flash script + suppressHydrationWarning
+- tailwind.config.ts — added darkMode: 'class'
+- src/components/DashboardSidebar.tsx — logo, user row, logout,
+  active link highlighting via usePathname(), theme toggle button
+- src/components/board/TaskCard.tsx — full card draggable (listeners
+  on motion.div), onClick with isDragging guard opens edit modal
+- src/components/board/KanbanColumn.tsx — Add task button,
+  empty state inside droppable div
+- src/components/board/KanbanBoard.tsx — modal state lifted up,
+  KanbanSkeleton while loading
+- src/app/(dashboard)/page.tsx — full homepage redesign
+- src/app/(dashboard)/github/page.tsx — skeleton stat cards
+- src/app/(dashboard)/standup/page.tsx — skeleton task rows
+
+## Key lessons
+
+- Dark mode flash fix: use an inline <script> in <head> that runs
+  before React hydrates — reads localStorage and sets dark class
+  on <html> synchronously. useEffect is too late (runs after paint).
+  Add suppressHydrationWarning to <html> to silence React warning.
+- packages/ui dark mode: when adding dark mode to the dashboard,
+  don't forget components in packages/ui — they need dark: variants
+  too. After editing packages/ui, always rebuild:
+  pnpm build --filter @devpulse/ui
+- Full card draggable vs grip handle: putting dnd-kit listeners on
+  the entire card is better UX than a tiny grip handle.
+  activationConstraint: { distance: 5 } on MouseSensor separates
+  click (< 5px movement) from drag (>= 5px movement) cleanly.
+- RLS insert/delete policies: Supabase RLS blocks inserts and
+  deletes silently (no console error) if policies are missing.
+  Always add INSERT and DELETE policies alongside SELECT and UPDATE:
+  CREATE POLICY "dev: insert tasks" ON tasks FOR INSERT WITH CHECK (true);
+  CREATE POLICY "dev: delete tasks" ON tasks FOR DELETE USING (true);
+- Supabase returns embedded joins as arrays regardless of cardinality.
+  Type columns as { name: string }[] | null and access via [0].
+
+## Deployment
+
+- Live on Vercel
+- Root directory set to apps/dashboard in Vercel project settings
+- All environment variables added to Vercel project settings
