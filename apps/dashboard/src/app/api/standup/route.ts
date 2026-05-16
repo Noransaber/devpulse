@@ -6,7 +6,7 @@ export async function POST() {
   if (!process.env.OPENAI_API_KEY) {
     return new Response(
       JSON.stringify({ error: 'OPENAI_API_KEY not configured — add it to .env.local' }),
-      { status: 503, headers: { 'Content-Type': 'application/json' } },
+      { status: 503, headers: { 'Content-Type': 'application/json' } }
     )
   }
 
@@ -41,5 +41,5 @@ Write the standup:`
     prompt,
   })
 
-  return result.toDataStreamResponse()
+  return result.toTextStreamResponse()
 }
