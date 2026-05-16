@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { Skeleton } from '@devpulse/ui'
 
 interface Commit {
   message: string
@@ -37,9 +38,34 @@ export default function GitHubPage() {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center text-sm text-gray-500">
-        Loading GitHub data…
-      </div>
+      <main className="mx-auto flex max-w-3xl flex-col gap-6 p-8">
+        <div className="flex flex-col gap-2">
+          <Skeleton height={28} width={120} />
+          <Skeleton height={14} width={180} />
+        </div>
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="flex flex-col items-center gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4"
+            >
+              <Skeleton height={32} width={48} />
+              <Skeleton height={12} width={56} />
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col gap-2">
+          {[0, 1, 2, 3].map((i) => (
+            <div
+              key={i}
+              className="flex flex-col gap-2 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3"
+            >
+              <Skeleton height={14} width="75%" />
+              <Skeleton height={12} width="40%" />
+            </div>
+          ))}
+        </div>
+      </main>
     )
   }
 
@@ -70,19 +96,19 @@ export default function GitHubPage() {
   ]
 
   return (
-    <main className="mx-auto max-w-3xl p-8 flex flex-col gap-6">
+    <main className="mx-auto flex max-w-3xl flex-col gap-6 p-8">
       <div>
-        <h1 className="text-2xl font-bold text-gray-100">GitHub</h1>
-        <p className="mt-1 text-sm text-gray-400">Noransaber / devpulse</p>
+        <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">GitHub</h1>
+        <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">Noransaber / devpulse</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
         {stats.map(({ label, value }) => (
           <div
             key={label}
-            className="rounded-lg border border-gray-800 bg-gray-900 p-4 text-center"
+            className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-4 text-center"
           >
-            <p className="text-2xl font-bold text-gray-100">{value}</p>
+            <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">{value}</p>
             <p className="mt-1 text-xs text-gray-500">{label}</p>
           </div>
         ))}
@@ -99,9 +125,9 @@ export default function GitHubPage() {
             {commits.map((commit, i) => (
               <li
                 key={i}
-                className="rounded-lg border border-gray-800 bg-gray-900 px-4 py-3"
+                className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3"
               >
-                <p className="line-clamp-2 text-sm leading-snug text-gray-100">
+                <p className="line-clamp-2 text-sm leading-snug text-gray-900 dark:text-gray-100">
                   {commit.message.split('\n')[0]}
                 </p>
                 <p className="mt-1 text-xs text-gray-500">

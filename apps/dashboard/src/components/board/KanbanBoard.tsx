@@ -19,6 +19,8 @@ import { createClient } from '@/lib/supabase/client'
 import { useRealtimeTasks } from '@/hooks/useRealtimeTasks'
 import { KanbanColumn, type Column } from './KanbanColumn'
 import { TaskCard, type Task } from './TaskCard'
+import { TaskModal } from './TaskModal'
+import { KanbanSkeleton } from './KanbanSkeleton'
 
 type MoveTaskVars = {
   taskId: string
@@ -33,6 +35,13 @@ interface KanbanBoardProps {
 export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const queryClient = useQueryClient()
   const [activeTask, setActiveTask] = useState<Task | null>(null)
+
+  type ModalState =
+    | { mode: 'closed' }
+    | { mode: 'create'; columnId: string }
+    | { mode: 'edit'; task: Task }
+
+  const [modal, setModal] = useState<ModalState>({ mode: 'closed' })
 
   useRealtimeTasks(projectId)
 
@@ -132,6 +141,20 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     },
   })
 
+  // ── Modal handlers ────────────────────────────────────────────────────────
+
+  function openCreateModal(columnId: string) {
+    setModal({ mode: 'create', columnId })
+  }
+
+  function openEditModal(task: Task) {
+    setModal({ mode: 'edit', task })
+  }
+
+  function closeModal() {
+    setModal({ mode: 'closed' })
+  }
+
   // ── Drag handlers ──────────────────────────────────────────────────────────
 
   function onDragStart({ active }: DragStartEvent) {
@@ -165,11 +188,7 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   // ── Render ─────────────────────────────────────────────────────────────────
 
   if (!columns || !tasks) {
-    return (
-      <div className="flex h-full items-center justify-center text-sm text-gray-500">
-        Loading board…
-      </div>
-    )
+    return <KanbanSkeleton />
   }
 
   return (
@@ -187,6 +206,8 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
             tasks={tasks
               .filter((t) => t.column_id === column.id)
               .sort((a, b) => a.position - b.position)}
+            onAddTask={openCreateModal}
+            onEditTask={openEditModal}
           />
         ))}
       </div>
@@ -203,6 +224,14 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
           </motion.div>
         )}
       </DragOverlay>
+
+      <TaskModal
+        isOpen={modal.mode !== 'closed'}
+        onClose={closeModal}
+        projectId={projectId}
+        columnId={modal.mode === 'create' ? modal.columnId : modal.mode === 'edit' ? modal.task.column_id : ''}
+        {...(modal.mode === 'edit' ? { task: modal.task } : {})}
+      />
     </DndContext>
   )
 }

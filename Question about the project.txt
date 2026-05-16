@@ -1,0 +1,13 @@
+and also please list all of them at onceClaude responded: I have 8 questions total.I have 8 questions total. Here they are:
+
+✅ Optimistic updates — drag card flow
+✅ Two Supabase clients — why and difference
+✅ TanStack Query vs useEffect
+✅ GitHub API proxy — why server-side
+
+Remaining:
+
+What is Supabase Realtime and how does it work in DevPulse? What did you have to enable in Supabase for it to work?
+You used Clerk for auth. What does middleware.ts actually do on every request?
+You have a monorepo with Turborepo. Why not just one Next.js project? What problem does the monorepo solve?
+An interviewer looks at your project and asks: "If DevPulse had 10,000 users, what would break first?"

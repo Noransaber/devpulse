@@ -36,7 +36,7 @@ export function Skeleton({
       {...props}
       aria-hidden
       className={cn(
-        'animate-pulse bg-gray-700/60',
+        'animate-pulse bg-gray-200 dark:bg-gray-700/60',
         rounded ? 'rounded-full' : 'rounded-md',
         className,
       )}

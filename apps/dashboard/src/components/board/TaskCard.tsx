@@ -18,21 +18,19 @@ export type Task = {
 
 interface TaskCardProps {
   task: Task
+  onEdit: (task: Task) => void
 }
 
-export function TaskCard({ task }: TaskCardProps) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: task.id })
+export function TaskCard({ task, onEdit }: TaskCardProps) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: task.id,
+  })
 
   return (
     <motion.div
       ref={setNodeRef}
+      {...attributes}
+      {...listeners}
       style={{
         transform: CSS.Transform.toString(transform),
         transition,
@@ -40,10 +38,13 @@ export function TaskCard({ task }: TaskCardProps) {
       layout={!isDragging}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
       animate={{ opacity: isDragging ? 0.4 : 1 }}
-      {...attributes}
-      {...listeners}
     >
-      <KanbanCard title={task.title} />
+      <KanbanCard
+        title={task.title}
+        onClick={() => {
+          if (!isDragging) onEdit(task)
+        }}
+      />
     </motion.div>
   )
 }
