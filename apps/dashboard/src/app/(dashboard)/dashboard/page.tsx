@@ -109,7 +109,7 @@ export default function HomePage() {
           Overview
         </h2>
         {isLoading ? (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[0, 1, 2].map((i) => (
               <div key={i} className="flex flex-col gap-3 rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 p-5">
                 <Skeleton height={12} width="55%" />
@@ -118,7 +118,7 @@ export default function HomePage() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <StatCard label="Total Tasks"  value={totalTasks} />
             <StatCard label="In Progress"  value={inProgress} />
             <StatCard label="Done Today"   value={doneToday} />
@@ -131,7 +131,7 @@ export default function HomePage() {
         <h2 className="mb-3 text-xs font-medium uppercase tracking-wider text-gray-500">
           Navigate
         </h2>
-        <div className="grid grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <FeatureCard
             href="/board"
             title="Board"

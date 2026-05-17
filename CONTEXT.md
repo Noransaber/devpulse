@@ -19,7 +19,7 @@ I haven't worked with before while reinforcing what I already know.
 - Turborepo (monorepo — apps/dashboard, apps/storybook, packages/ui)
 - Storybook (component library)
 - Vitest (unit testing)
-- Vercel AI SDK + @ai-sdk/openai + @ai-sdk/react (AI Standup Generator)
+- Vercel AI SDK + @ai-sdk/google + @ai-sdk/react (AI Standup Generator — uses Gemini, free tier)
 - @ducanh2912/next-pwa (PWA — service worker + manifest)
 - Vercel (deployment)
 
@@ -173,10 +173,10 @@ cn() — combines clsx + tailwind-merge for all className logic
 - src/app/(dashboard)/github/page.tsx (stars, forks, open PRs,
   open issues, last 5 commits)
 - src/app/api/standup/route.ts (fetches Done tasks from last 24h,
-  streams OpenAI response via Vercel AI SDK streamText)
+  streams AI response via Vercel AI SDK streamText)
 - src/app/(dashboard)/standup/page.tsx (lists completed tasks,
   Generate Standup button, streams response word-by-word,
-  graceful 503 message if OPENAI_API_KEY is missing)
+  graceful 503 message if API key is missing)
 - public/manifest.json (name, icons, theme #4f46e5, standalone)
 - public/icon-192x192.png + icon-512x512.png
 
@@ -208,7 +208,7 @@ cn() — combines clsx + tailwind-merge for all className logic
 - @sentry/nextjs
 - @supabase/supabase-js (Realtime channels)
 - @apollo/client + graphql
-- ai + @ai-sdk/openai + @ai-sdk/react
+- ai + @ai-sdk/google + @ai-sdk/react
 - @ducanh2912/next-pwa (NOT next-pwa — that package is unmaintained
   and has webpack conflicts with Next.js 14)
 
@@ -220,7 +220,7 @@ cn() — combines clsx + tailwind-merge for all className logic
 - NEXT_PUBLIC_SUPABASE_ANON_KEY
 - GITHUB_ACCESS_TOKEN (scopes: read:user, public_repo)
 - NEXT_PUBLIC_SENTRY_DSN
-- OPENAI_API_KEY (optional — standup page handles missing key gracefully)
+- GOOGLE_GENERATIVE_AI_API_KEY (free — get from aistudio.google.com)
 
 # Session 5 — Completed (Polish + Dark Mode + Full CRUD)
 
@@ -350,3 +350,123 @@ cn() — combines clsx + tailwind-merge for all className logic
 - /board → protected Kanban board
 - /github → protected GitHub metrics
 - /standup → protected AI standup generator
+
+# Session 7 — Completed (Team Members Page + Board Filtering)
+
+## What was built
+
+- /team page: roster of team members with add/remove, online dot,
+  and task count per member
+- Board filtering toolbar on /board: search, assignee filter,
+  column filter, clear button; drag disabled when filters active
+
+## New files
+
+- src/hooks/useTeamMembers.ts (useTeamMembers, useAddMember,
+  useDeleteMember — all with optimistic updates, query key
+  ['team_members'])
+- src/stores/presenceStore.ts (Zustand store: onlineUsers +
+  setOnlineUsers — bridge so only one Supabase channel subscriber
+  exists)
+- src/stores/boardFilterStore.ts (Zustand store: search,
+  assigneeId, columnId, setSearch, setAssigneeId, setColumnId,
+  reset)
+- src/components/board/BoardToolbar.tsx (search Input, assignee
+  select, column select, Clear filters button — reads/writes
+  boardFilterStore)
+- src/app/(dashboard)/team/page.tsx (responsive grid, MemberCard
+  with avatar/online dot/task count/remove confirm, Add member
+  modal, skeleton loading, empty state)
+
+## Files updated from previous sessions
+
+- src/components/DashboardSidebar.tsx — added /team to NAV_LINKS,
+  syncs usePresence() output to presenceStore via useEffect
+- src/components/board/KanbanBoard.tsx — added BoardToolbar,
+  isFiltered + filteredTasks logic, sensors={isFiltered ? [] :
+  sensors}, "Filters active — drag disabled" banner
+
+## Key lessons
+
+- Presence double-subscribe error: "cannot add presence callbacks
+  after subscribe()" fires when usePresence() is called in more
+  than one component. Fix: create a Zustand presenceStore, keep
+  DashboardSidebar as the single subscriber, have all other
+  components read from the store instead of opening new channels.
+- clerk_user_id NOT NULL constraint: adding members by name has
+  no Clerk ID to attach. Fixed by making the column nullable:
+  ALTER TABLE team_members ALTER COLUMN clerk_user_id DROP NOT NULL;
+- Inline component focus loss: defining a form component inside
+  another component's render function causes React to unmount/
+  remount it on every keystroke, losing focus. Always define form
+  components outside the parent or use inline JSX directly.
+- Disabling dnd-kit drag: pass sensors={[]} to DndContext to
+  disable all drag interaction when filters are active.
+
+## Supabase migrations run
+
+- ALTER TABLE team_members ALTER COLUMN clerk_user_id DROP NOT NULL;
+
+# Session 8 — Completed (AI Standup Fixes + Favicon + Meta Tags)
+
+## What was built
+
+- AI Standup Generator fully working with Google Gemini (free)
+- Favicon + full meta tags (OpenGraph, Twitter card, title template)
+
+## Changes made
+
+### AI Standup — switched from OpenAI to Gemini
+
+- Replaced @ai-sdk/openai with @ai-sdk/google
+- Model: gemini-2.0-flash (free tier via aistudio.google.com)
+- Environment variable: GOOGLE_GENERATIVE_AI_API_KEY
+  (replaces OPENAI_API_KEY)
+
+### AI Standup — streaming fix
+
+- toDataStreamResponse() did not exist on the installed ai version
+- Fix: manually construct ReadableStream over result.textStream
+  and return new Response(readable, { 'Content-Type': 'text/plain' })
+- Replaced useCompletion (from @ai-sdk/react) with manual fetch +
+  ReadableStream reader on the frontend — avoids all SDK version
+  conflicts and gives the same word-by-word streaming effect
+
+### Favicon + Meta Tags
+
+- src/app/icon.svg — indigo rounded-rect with white pulse line,
+  auto-detected by Next.js as favicon (no config needed)
+- src/app/layout.tsx metadata updated with:
+  - title template: '%s | DevPulse'
+  - description, keywords, authors, creator
+  - metadataBase pointing to Vercel deployment URL
+  - openGraph: title, description, url, siteName, locale, type
+  - twitter: card summary, title, description, creator
+  - icons: icon + apple both pointing to /icon.svg
+
+## Key lessons
+
+- gemini-1.5-flash is deprecated (404 NOT_FOUND as of May 2026).
+  Use gemini-2.0-flash instead.
+- Free tier rate limits: Gemini free tier has per-minute AND
+  per-day limits. Rapid test clicks during debugging will exhaust
+  them. In normal usage (once per day) it is well within limits.
+  If daily limit is hit, create a new Google AI Studio project
+  for a fresh quota.
+- toDataStreamResponse() vs toTextStreamResponse(): useCompletion
+  expects the AI SDK data stream protocol. If the method doesn't
+  exist on your ai version, bypass both by using a manual
+  ReadableStream on the server and a manual fetch reader on the
+  client — works with any version.
+- Next.js App Router favicon: place icon.svg (or icon.png) in
+  app/ directory. Next.js auto-detects and serves it — no <link>
+  tag or next.config change needed.
+
+## Packages added
+
+- @ai-sdk/google (replaces @ai-sdk/openai)
+
+## Environment variables updated
+
+- GOOGLE_GENERATIVE_AI_API_KEY (replaces OPENAI_API_KEY)
+  Add to both .env.local and Vercel project settings

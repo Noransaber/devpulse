@@ -4,6 +4,7 @@ import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useUser, useClerk } from '@clerk/nextjs'
 import { Sidebar } from '@devpulse/ui'
+import { AnimatePresence, motion } from 'framer-motion'
 import { usePresence } from '@/hooks/usePresence'
 import { useTheme } from '@/hooks/useTheme'
 import { usePresenceStore } from '@/stores/presenceStore'
@@ -32,10 +33,15 @@ function MoonIcon() {
   )
 }
 
-export function DashboardSidebar() {
-  const pathname   = usePathname()
-  const router     = useRouter()
-  const { user }   = useUser()
+interface DashboardSidebarProps {
+  isOpen: boolean
+  onClose: () => void
+}
+
+export function DashboardSidebar({ isOpen, onClose }: DashboardSidebarProps) {
+  const pathname    = usePathname()
+  const router      = useRouter()
+  const { user }    = useUser()
   const { signOut } = useClerk()
   const { theme, toggle } = useTheme()
   const onlineUsers = usePresence()
@@ -48,6 +54,7 @@ export function DashboardSidebar() {
     onClick: (e: React.MouseEvent<HTMLAnchorElement>) => {
       e.preventDefault()
       router.push(link.href)
+      onClose()
     },
   }))
 
@@ -58,72 +65,110 @@ export function DashboardSidebar() {
     user?.emailAddresses?.[0]?.emailAddress ||
     ''
 
-  return (
-    <Sidebar
-      links={links}
-      brand={
-        <div className="flex items-center gap-2.5">
-          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-blue-600 text-xs font-bold text-white">
-            D
-          </span>
-          <span className="text-sm font-bold tracking-wide text-gray-900 dark:text-gray-100">
-            DevPulse
-          </span>
-        </div>
-      }
-      footer={
-        <div className="flex flex-col gap-4">
-          {/* Online presence */}
-          {onlineUsers.length > 0 && (
-            <div className="flex flex-col gap-1.5">
-              <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
-                Online
-              </p>
-              {onlineUsers.map((u) => (
-                <div key={u.userId} className="flex items-center gap-2">
-                  <span className="h-2 w-2 shrink-0 rounded-full bg-green-400" />
-                  <span className="truncate text-sm text-gray-700 dark:text-gray-300">
-                    {u.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          )}
+  const brand = (
+    <div className="flex items-center gap-2.5">
+      <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-blue-600 text-xs font-bold text-white">
+        D
+      </span>
+      <span className="text-sm font-bold tracking-wide text-gray-900 dark:text-gray-100">
+        DevPulse
+      </span>
+    </div>
+  )
 
-          {/* User avatar + name + theme toggle */}
-          <div className="flex items-center gap-2.5">
-            {user?.imageUrl ? (
-              <img
-                src={user.imageUrl}
-                alt={displayName}
-                className="h-7 w-7 shrink-0 rounded-full object-cover"
-              />
-            ) : (
-              <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-xs font-medium text-gray-600 dark:text-gray-200">
-                {initials}
+  const footer = (
+    <div className="flex flex-col gap-4">
+      {onlineUsers.length > 0 && (
+        <div className="flex flex-col gap-1.5">
+          <p className="text-xs font-medium uppercase tracking-wider text-gray-500">
+            Online
+          </p>
+          {onlineUsers.map((u) => (
+            <div key={u.userId} className="flex items-center gap-2">
+              <span className="h-2 w-2 shrink-0 rounded-full bg-green-400" />
+              <span className="truncate text-sm text-gray-700 dark:text-gray-300">
+                {u.name}
               </span>
-            )}
-            <p className="flex-1 truncate text-sm font-medium text-gray-800 dark:text-gray-200">
-              {displayName}
-            </p>
-            <button
-              onClick={toggle}
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
-              className="shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300"
-            >
-              {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
-            </button>
-          </div>
-
-          {/* Logout */}
-          <button
-            onClick={() => signOut({ redirectUrl: '/sign-in' })}
-            className="w-full rounded-md px-3 py-1.5 text-left text-sm text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300"
-          >
-            Sign out
-          </button>
+            </div>
+          ))}
         </div>
-      }
-    />
+      )}
+
+      <div className="flex items-center gap-2.5">
+        {user?.imageUrl ? (
+          <img
+            src={user.imageUrl}
+            alt={displayName}
+            className="h-7 w-7 shrink-0 rounded-full object-cover"
+          />
+        ) : (
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-gray-200 dark:bg-gray-700 text-xs font-medium text-gray-600 dark:text-gray-200">
+            {initials}
+          </span>
+        )}
+        <p className="flex-1 truncate text-sm font-medium text-gray-800 dark:text-gray-200">
+          {displayName}
+        </p>
+        <button
+          onClick={toggle}
+          aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+          className="shrink-0 rounded-md p-1 text-gray-400 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300"
+        >
+          {theme === 'dark' ? <SunIcon /> : <MoonIcon />}
+        </button>
+      </div>
+
+      <button
+        onClick={() => signOut({ redirectUrl: '/sign-in' })}
+        className="w-full rounded-md px-3 py-1.5 text-left text-sm text-gray-500 transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-700 dark:hover:text-gray-300"
+      >
+        Sign out
+      </button>
+    </div>
+  )
+
+  return (
+    <>
+      {/* Desktop: static sidebar in the flex flow */}
+      <div className="hidden md:flex h-full">
+        <Sidebar links={links} brand={brand} footer={footer} />
+      </div>
+
+      {/* Mobile: fixed overlay drawer */}
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            {/* Backdrop */}
+            <motion.div
+              className="fixed inset-0 z-40 bg-black/50 md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={onClose}
+            />
+
+            {/* Drawer */}
+            <motion.div
+              className="fixed inset-y-0 left-0 z-50 w-64 md:hidden"
+              initial={{ x: -256 }}
+              animate={{ x: 0 }}
+              exit={{ x: -256 }}
+              transition={{ type: 'tween', duration: 0.2 }}
+            >
+              {/* Close button — only visible inside the mobile drawer */}
+              <button
+                onClick={onClose}
+                aria-label="Close navigation"
+                className="absolute top-4 right-4 z-10 rounded-md p-1 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-600 dark:hover:text-gray-300"
+              >
+                ✕
+              </button>
+
+              <Sidebar links={links} brand={brand} footer={footer} className="w-full" />
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </>
   )
 }
