@@ -1,11 +1,13 @@
 import { streamText } from 'ai'
-import { openai } from '@ai-sdk/openai'
+import { google } from '@ai-sdk/google'
 import { createClient } from '@/lib/supabase/server'
 
 export async function POST() {
-  if (!process.env.OPENAI_API_KEY) {
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     return new Response(
-      JSON.stringify({ error: 'OPENAI_API_KEY not configured — add it to .env.local' }),
+      JSON.stringify({
+        error: 'GOOGLE_GENERATIVE_AI_API_KEY not configured — add it to .env.local',
+      }),
       { status: 503, headers: { 'Content-Type': 'application/json' } }
     )
   }
@@ -36,10 +38,31 @@ ${taskList}
 
 Write the standup:`
 
-  const result = await streamText({
-    model: openai('gpt-4o-mini'),
-    prompt,
-  })
+  // Replace with this
+  const result = await streamText({ model: google('gemini-2.0-flash-lite'), prompt })
+  const encoder = new TextEncoder()
+  // const readable = new ReadableStream({
+  //   async start(controller) {
+  //     for await (const chunk of result.textStream) {
+  //       controller.enqueue(encoder.encode(chunk))
+  //     }
+  //     controller.close()
+  //   },
+  // })
 
-  return result.toTextStreamResponse()
+  const readable = new ReadableStream({
+    async start(controller) {
+      let totalChunks = 0
+      for await (const chunk of result.textStream) {
+        console.log('chunk:', chunk)
+        totalChunks++
+        controller.enqueue(encoder.encode(chunk))
+      }
+      console.log('Stream done, total chunks:', totalChunks)
+      controller.close()
+    },
+  })
+  return new Response(readable, {
+    headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+  })
 }

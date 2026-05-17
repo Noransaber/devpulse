@@ -1,16 +1,19 @@
 'use client'
 
+import { useEffect } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import { useUser, useClerk } from '@clerk/nextjs'
 import { Sidebar } from '@devpulse/ui'
 import { usePresence } from '@/hooks/usePresence'
 import { useTheme } from '@/hooks/useTheme'
+import { usePresenceStore } from '@/stores/presenceStore'
 
 const NAV_LINKS = [
   { href: '/dashboard', label: 'Home' },
   { href: '/board',     label: 'Board' },
   { href: '/github',    label: 'GitHub' },
   { href: '/standup',   label: 'Standup' },
+  { href: '/team',      label: 'Team' },
 ]
 
 function SunIcon() {
@@ -36,6 +39,8 @@ export function DashboardSidebar() {
   const { signOut } = useClerk()
   const { theme, toggle } = useTheme()
   const onlineUsers = usePresence()
+  const { setOnlineUsers } = usePresenceStore()
+  useEffect(() => { setOnlineUsers(onlineUsers) }, [onlineUsers, setOnlineUsers])
 
   const links = NAV_LINKS.map((link) => ({
     ...link,

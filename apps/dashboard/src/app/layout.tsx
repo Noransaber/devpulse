@@ -4,8 +4,33 @@ import { ReactQueryProvider } from '@/lib/query/provider'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'DevPulse',
-  description: 'Real-time engineering team dashboard',
+  title: {
+    default: 'DevPulse',
+    template: '%s | DevPulse',
+  },
+  description: 'Real-time engineering team dashboard — Kanban board, GitHub metrics, team presence, and AI standups.',
+  keywords: ['dashboard', 'engineering', 'kanban', 'real-time', 'Next.js'],
+  authors: [{ name: 'Noran Abdelfattah' }],
+  creator: 'Noran Abdelfattah',
+  metadataBase: new URL('https://devpulse-dashboard-zeta.vercel.app'),
+  openGraph: {
+    title: 'DevPulse',
+    description: 'Real-time engineering team dashboard',
+    url: 'https://devpulse-dashboard-zeta.vercel.app',
+    siteName: 'DevPulse',
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'DevPulse',
+    description: 'Real-time engineering team dashboard',
+    creator: '@noransaber685',
+  },
+  icons: {
+    icon: '/icon.svg',
+    apple: '/icon.svg',
+  },
   manifest: '/manifest.json',
 }
 

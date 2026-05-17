@@ -17,10 +17,12 @@ import { motion } from 'framer-motion'
 import { KanbanCard } from '@devpulse/ui'
 import { createClient } from '@/lib/supabase/client'
 import { useRealtimeTasks } from '@/hooks/useRealtimeTasks'
+import { useBoardFilterStore } from '@/stores/boardFilterStore'
 import { KanbanColumn, type Column } from './KanbanColumn'
 import { TaskCard, type Task } from './TaskCard'
 import { TaskModal } from './TaskModal'
 import { KanbanSkeleton } from './KanbanSkeleton'
+import { BoardToolbar } from './BoardToolbar'
 
 type MoveTaskVars = {
   taskId: string
@@ -44,6 +46,8 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
   const [modal, setModal] = useState<ModalState>({ mode: 'closed' })
 
   useRealtimeTasks(projectId)
+
+  const { search, assigneeId, columnId } = useBoardFilterStore()
 
   // Activate drag only after moving 5 px — prevents accidental drags on click
   const sensors = useSensors(
@@ -191,47 +195,66 @@ export function KanbanBoard({ projectId }: KanbanBoardProps) {
     return <KanbanSkeleton />
   }
 
+  const isFiltered = search !== '' || assigneeId !== null || columnId !== null
+
+  const filteredTasks = tasks.filter((t) => {
+    if (search && !t.title.toLowerCase().includes(search.toLowerCase())) return false
+    if (assigneeId && t.assignee_id !== assigneeId) return false
+    if (columnId && t.column_id !== columnId) return false
+    return true
+  })
+
   return (
-    <DndContext
-      sensors={sensors}
-      collisionDetection={closestCorners}
-      onDragStart={onDragStart}
-      onDragEnd={onDragEnd}
-    >
-      <div className="flex gap-5 overflow-x-auto p-6">
-        {columns.map((column) => (
-          <KanbanColumn
-            key={column.id}
-            column={column}
-            tasks={tasks
-              .filter((t) => t.column_id === column.id)
-              .sort((a, b) => a.position - b.position)}
-            onAddTask={openCreateModal}
-            onEditTask={openEditModal}
-          />
-        ))}
-      </div>
+    <>
+      <BoardToolbar columns={columns} />
+      {isFiltered && (
+        <div className="flex items-center border-b border-amber-200 dark:border-amber-900/50 bg-amber-50 dark:bg-amber-950/30 px-6 py-2">
+          <span className="text-xs text-amber-700 dark:text-amber-400">
+            Filters active — clear to enable drag
+          </span>
+        </div>
+      )}
+      <DndContext
+        sensors={isFiltered ? [] : sensors}
+        collisionDetection={closestCorners}
+        onDragStart={onDragStart}
+        onDragEnd={onDragEnd}
+      >
+        <div className="flex gap-5 overflow-x-auto p-6">
+          {columns.map((column) => (
+            <KanbanColumn
+              key={column.id}
+              column={column}
+              tasks={filteredTasks
+                .filter((t) => t.column_id === column.id)
+                .sort((a, b) => a.position - b.position)}
+              onAddTask={openCreateModal}
+              onEditTask={openEditModal}
+            />
+          ))}
+        </div>
 
-      {/* Renders a floating copy of the card that follows the cursor during drag.
-          The original card stays in place at 40 % opacity (set in TaskCard). */}
-      <DragOverlay>
-        {activeTask && (
-          <motion.div
-            initial={{ scale: 1.03, rotate: 1 }}
-            className="cursor-grabbing drop-shadow-xl"
-          >
-            <KanbanCard title={activeTask.title} />
-          </motion.div>
-        )}
-      </DragOverlay>
+        {/* Renders a floating copy of the card that follows the cursor during drag.
+            The original card stays in place at 40 % opacity (set in TaskCard). */}
+        <DragOverlay>
+          {activeTask && (
+            <motion.div
+              initial={{ scale: 1.03, rotate: 1 }}
+              className="cursor-grabbing drop-shadow-xl"
+            >
+              <KanbanCard title={activeTask.title} />
+            </motion.div>
+          )}
+        </DragOverlay>
 
-      <TaskModal
-        isOpen={modal.mode !== 'closed'}
-        onClose={closeModal}
-        projectId={projectId}
-        columnId={modal.mode === 'create' ? modal.columnId : modal.mode === 'edit' ? modal.task.column_id : ''}
-        {...(modal.mode === 'edit' ? { task: modal.task } : {})}
-      />
-    </DndContext>
+        <TaskModal
+          isOpen={modal.mode !== 'closed'}
+          onClose={closeModal}
+          projectId={projectId}
+          columnId={modal.mode === 'create' ? modal.columnId : modal.mode === 'edit' ? modal.task.column_id : ''}
+          {...(modal.mode === 'edit' ? { task: modal.task } : {})}
+        />
+      </DndContext>
+    </>
   )
 }

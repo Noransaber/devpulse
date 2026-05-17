@@ -290,3 +290,63 @@ cn() — combines clsx + tailwind-merge for all className logic
 - Live on Vercel
 - Root directory set to apps/dashboard in Vercel project settings
 - All environment variables added to Vercel project settings
+
+# Session 6 — Completed (Landing Page + Auth Styling + Route Restructure)
+
+## What was built
+
+- Public landing page at / (no auth required)
+- Navbar with logo + Sign in + Get started buttons
+- Hero section with animated gradient orbs and CTA buttons
+- Features section with 4 cards and hover animations
+- Footer with social links (GitHub, LinkedIn, Twitter, Medium)
+- Styled Clerk auth forms matching DevPulse branding
+- Route restructure: dashboard home moved from / to /dashboard
+
+## New files
+
+- src/app/page.tsx (public landing page — Navbar, Hero,
+  Features, Footer all in one file, ~290 lines)
+- src/app/(dashboard)/dashboard/page.tsx (dashboard home,
+  moved from the old (dashboard)/page.tsx)
+
+## Files updated from previous sessions
+
+- src/middleware.ts — added '/' to isPublicRoute matcher
+- src/components/DashboardSidebar.tsx — Home link updated
+  from '/' to '/dashboard', isActive logic corrected
+- src/app/(auth)/sign-in/[[...sign-in]]/page.tsx — Clerk
+  appearance prop with indigo primary, rounded-lg, dark theme
+- src/app/(auth)/sign-up/[[...sign-up]]/page.tsx — same
+  appearance prop as sign-in
+
+## Deleted files
+
+- src/app/(dashboard)/page.tsx — replaced by /dashboard/page.tsx
+
+## Key lessons
+
+- Clerk fallback redirect URLs must point to /dashboard not / —
+  otherwise signed-in users clicking Sign in get redirected back
+  to the landing page (looks like a reload):
+  NEXT_PUBLIC_CLERK_SIGN_IN_FALLBACK_REDIRECT_URL=/dashboard
+  NEXT_PUBLIC_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
+  Update these in both .env.local AND Vercel environment variables.
+- Framer Motion orbs need pointer-events-none on each motion.div
+  individually — CSS transform creates a new stacking context that
+  breaks pointer-event inheritance from the parent wrapper.
+- Clerk appearance prop customization: colorNeutral controls icon
+  tints, divider text ("or"), and secondary button text like
+  "Continue with Google" — set to #ffffff for dark backgrounds.
+- Public routes in middleware must explicitly list '/' — it is NOT
+  public by default even though it seems obvious.
+
+## Route structure (final)
+
+- / → public landing page (no auth)
+- /sign-in → Clerk sign-in (public)
+- /sign-up → Clerk sign-up (public)
+- /dashboard → protected dashboard home (was /)
+- /board → protected Kanban board
+- /github → protected GitHub metrics
+- /standup → protected AI standup generator

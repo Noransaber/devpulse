@@ -1,9 +1,9 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { useCompletion } from '@ai-sdk/react'
 import { Skeleton } from '@devpulse/ui'
 import { createClient } from '@/lib/supabase/client'
+import { useState } from 'react'
 
 type CompletedTask = {
   id: string
@@ -32,11 +32,32 @@ export default function StandupPage() {
     queryFn: fetchCompletedTasks,
   })
 
-  const { complete, completion, isLoading: generating, error } = useCompletion({
-    api: '/api/standup',
-  })
+  // Replace with this
+  const [completion, setCompletion] = useState('')
+  const [generating, setGenerating] = useState(false)
+  const [error, setError] = useState<Error | null>(null)
 
-  const missingKey = error?.message?.includes('OPENAI_API_KEY')
+  async function complete() {
+    setGenerating(true)
+    setCompletion('')
+    setError(null)
+    try {
+      const res = await fetch('/api/standup', { method: 'POST' })
+      if (!res.ok) throw new Error(await res.text())
+      const reader = res.body!.getReader()
+      const decoder = new TextDecoder()
+      while (true) {
+        const { done, value } = await reader.read()
+        if (done) break
+        setCompletion((prev) => prev + decoder.decode(value))
+      }
+    } catch (e) {
+      setError(e as Error)
+    } finally {
+      setGenerating(false)
+    }
+  }
+  const missingKey = error?.message?.includes('GOOGLE_GENERATIVE_AI_API_KEY')
 
   return (
     <main className="mx-auto flex max-w-2xl flex-col gap-8 p-8">
@@ -72,9 +93,7 @@ export default function StandupPage() {
                 key={task.id}
                 className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-4 py-3"
               >
-                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                  {task.title}
-                </p>
+                <p className="text-sm font-medium text-gray-900 dark:text-gray-100">{task.title}</p>
                 {task.description && (
                   <p className="mt-0.5 text-xs text-gray-500">{task.description}</p>
                 )}
@@ -85,7 +104,7 @@ export default function StandupPage() {
       </div>
 
       <button
-        onClick={() => complete('')}
+        onClick={complete}
         disabled={generating}
         className="self-start rounded-lg bg-indigo-600 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-50"
       >
@@ -94,14 +113,12 @@ export default function StandupPage() {
 
       {missingKey && (
         <p className="text-sm text-amber-400">
-          OpenAI API key not configured — add{' '}
-          <code className="font-mono">OPENAI_API_KEY</code> to .env.local
+          OpenAI API key not configured — add <code className="font-mono">OPENAI_API_KEY</code> to
+          .env.local
         </p>
       )}
 
-      {!missingKey && error && (
-        <p className="text-sm text-red-400">{error.message}</p>
-      )}
+      {!missingKey && error && <p className="text-sm text-red-400">{error.message}</p>}
 
       {completion && (
         <div className="rounded-lg border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 px-5 py-4">
